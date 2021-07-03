@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WU", "WU\WU.csproj", "{640E8B8A-8837-4A4D-819E-4A79F4CC1F3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWU", "TestWU\TestWU.csproj", "{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{640E8B8A-8837-4A4D-819E-4A79F4CC1F3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{640E8B8A-8837-4A4D-819E-4A79F4CC1F3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{640E8B8A-8837-4A4D-819E-4A79F4CC1F3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{640E8B8A-8837-4A4D-819E-4A79F4CC1F3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A5EDB449-C615-4B63-B7FE-1DE09F586CA8}
+	EndGlobalSection
+EndGlobal
