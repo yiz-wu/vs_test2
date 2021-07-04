@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Moq;
 using Ninject;
 using TAP2018_19.AlarmClock.Interfaces;
 using TAP2018_19.AuctionSite.Interfaces;
@@ -17,6 +16,12 @@ namespace WU {
 
         static void Main(string[] args) {
 
+            // using (var context = new AuctionSiteContext(@"Data Source=pippo;Initial Catalog=pluto;Integrated Security=True;"))
+            // {
+            //     context.Sites.Select(s => s).ToList();
+            // }
+
+
             using (var context = new AuctionSiteContext(ConnectionString))
             {
                 var site = context.Sites.Create();
@@ -28,7 +33,19 @@ namespace WU {
                 context.Sites.Add(site);
                 context.SaveChanges();
             }
+            using (var context = new AuctionSiteContext(ConnectionString)) {
+                var site = context.Sites.Create();
+                site.Name = "First Site in DB v.2";
+                site.MinimumBidIncrement = 123.4;
+                site.SessionExpirationInSeconds = 10;
+                site.Timezone = 0;
 
+                context.Sites.Add(site);
+                context.SaveChanges();
+            }
+
+
+            /*
             using (var context = new AuctionSiteContext(ConnectionString)) {
                 var user = context.Users.Create();
                 user.Username = "First User";
@@ -55,7 +72,7 @@ namespace WU {
 
                 context.Sites.Remove(site);
                 context.SaveChanges();
-            }
+            }*/
 
         }
 

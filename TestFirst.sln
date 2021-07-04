@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWU", "TestWU\TestWU.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionSiteEntity", "AuctionSiteEntities\AuctionSiteEntity.csproj", "{A16CF21F-6608-4FF0-B9CD-F8010B359E7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionSite", "AuctionSite\AuctionSite.csproj", "{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A16CF21F-6608-4FF0-B9CD-F8010B359E7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A16CF21F-6608-4FF0-B9CD-F8010B359E7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A16CF21F-6608-4FF0-B9CD-F8010B359E7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

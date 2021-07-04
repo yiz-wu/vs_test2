@@ -11,10 +11,10 @@ namespace TAP2018_19.TestBaseClasses {
 
     internal static class Configuration {
         internal const string ImplementationAssembly =
-            @"..\..\..\NAME OF YOUR IMPLEMENTATION PROJECT FOLDER\bin\Debug\NAME OF YOUR IMPLEMENTATION PROJECT LIBRARY";
+            @"..\..\..\WU\bin\Debug\AuctionSite.dll";
 
         internal const string ConnectionString =
-            @"Data Source=.\SQLEXPRESS;Initial Catalog=ANY NAME YOU LIKE;Integrated Security=True;";
+            @"Data Source=.\SQLEXPRESS;Initial Catalog=TestFirst;Integrated Security=True;";
     }
 
     [TestFixture]
