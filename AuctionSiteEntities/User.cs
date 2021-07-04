@@ -12,13 +12,18 @@ namespace WU.Entity {
         public int UserId { get; set; }
 
         [Required]
-        [Index("UsernameIsUniqueInEachSite", 1, IsUnique = true)]
+        [Index("UsernameIsUniqueInEachSite", 2, IsUnique = true)]
         [MinLength(DomainConstraints.MinUserName)]
         [MaxLength(DomainConstraints.MaxUserName)]
         public string Username { get; set; }
 
         [Required]
-        protected string PasswordStored { get; set; }
+        [Index("UsernameIsUniqueInEachSite", 1, IsUnique = true)]
+        public int SiteId { get; set; }
+        public virtual Site Site { get; set; }
+
+        [Required]
+        public string PasswordStored { get; set; }
         [NotMapped]
         [MinLength(DomainConstraints.MinUserPassword)]
         public string Password {
@@ -32,10 +37,6 @@ namespace WU.Entity {
                 }
             }
         }
-
-        [Required]
-        [Index("UsernameIsUniqueInEachSite", 2, IsUnique = true)]
-        public virtual Site SiteId { get; set; }
 
         string IUser.Username => Username;
 

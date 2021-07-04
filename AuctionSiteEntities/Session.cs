@@ -11,11 +11,13 @@ namespace WU.Entity {
     public class Session : ISession{
         [Key]
         public string SessionId { get; set; }
-        // [Required]
-        // public virtual Site SiteId { get; set; }
+        [Required] 
+        public int SiteId { get; set; }
+        public virtual Site OfSite { get; set; }
         [Required]
         [Index(IsUnique = true)]
-        public virtual User User { get; set; }
+        public int UserId { get; set; }
+        public virtual User OfUser { get; set; }
         [Required]
         public DateTime ValidUntil { get; set; }
 
@@ -23,7 +25,7 @@ namespace WU.Entity {
 
         DateTime ISession.ValidUntil => ValidUntil;
 
-        IUser ISession.User => User;
+        IUser ISession.User => OfUser;
 
         IAuction ISession.CreateAuction(string description, DateTime endsOn, double startingPrice) {
             throw new NotImplementedException();

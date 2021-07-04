@@ -4,10 +4,31 @@ namespace WU.Entity
 {
     public class AuctionSiteContext : DbContext
     {
-        public static string ConnectionStrings;
+        public static string ConnectionStrings = "Unknown";
+        private string AttemptedConnectionString = "Unknown";
         public AuctionSiteContext(string DbConnectionStrings) : base(DbConnectionStrings)
         {
-            ConnectionStrings = DbConnectionStrings;
+            AttemptedConnectionString = DbConnectionStrings;
+        }
+        
+        protected override void Dispose(bool disposing)
+        {
+            ConnectionStrings = AttemptedConnectionString;
+            base.Dispose(disposing);
+        }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Session>()
+                .HasRequired(s => s.OfSite)
+                .WithMany()
+                .WillCascadeOnDelete(false);
+
+            // modelBuilder.Entity<User>()
+            //     .HasIndex(u => new {u.Username, u.SiteId})
+            //     .IsUnique();
         }
 
         public DbSet<Site> Sites { get; set; }

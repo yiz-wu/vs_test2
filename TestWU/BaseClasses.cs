@@ -14,7 +14,7 @@ namespace TAP2018_19.TestBaseClasses {
             @"..\..\..\WU\bin\Debug\AuctionSite.dll";
 
         internal const string ConnectionString =
-            @"Data Source=.\SQLEXPRESS;Initial Catalog=TestFirst;Integrated Security=True;";
+            @"Data Source=.\SQLEXPRESS;Initial Catalog=NUnitTestFirst;Integrated Security=True;";
     }
 
     [TestFixture]
