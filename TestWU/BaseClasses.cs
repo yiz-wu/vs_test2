@@ -23,6 +23,16 @@ namespace TAP2018_19.TestBaseClasses {
         protected static readonly ISiteFactory AnAuctionSiteFactory;
         protected static readonly string ImplementationAssembly = Configuration.ImplementationAssembly;
 
+        static AbstractTest() {
+            var kernel = new StandardKernel();
+
+            try {
+                AnAuctionSiteFactory = LoadSiteFactoryFromModule();
+            } catch (Exception e) {
+                Console.WriteLine(e);
+            }
+        }
+
         public static ISiteFactory LoadSiteFactoryFromModule() {
             var kernel = new StandardKernel();
             ISiteFactory result = null;
@@ -35,17 +45,6 @@ namespace TAP2018_19.TestBaseClasses {
             }
 
             return result;
-        }
-
-        static AbstractTest() {
-            var kernel = new StandardKernel();
-
-            try {
-                AnAuctionSiteFactory = LoadSiteFactoryFromModule();
-            }
-            catch (Exception e) {
-                Console.WriteLine(e);
-            }
         }
     }
 

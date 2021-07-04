@@ -7,24 +7,57 @@ using Moq;
 using Ninject;
 using TAP2018_19.AlarmClock.Interfaces;
 using TAP2018_19.AuctionSite.Interfaces;
+using WU.Entity;
 
 namespace WU {
     class Program {
-        protected Mock<IAlarmClock> AlarmClock;
 
+        private const string ConnectionString =
+            @"Data Source=.\SQLEXPRESS;Initial Catalog=FirstAuctionSiteDB;Integrated Security=True;";
 
         static void Main(string[] args) {
 
-            var kernel = new StandardKernel();
-            
-            ISiteFactory result = null;
-            try {
-                // kernel.Load(Configuration.ImplementationAssembly);
-                // result = kernel.Get<ISiteFactory>();
-            } catch (Exception e) {
-                Console.WriteLine(e);
+            using (var context = new AuctionSiteContext(ConnectionString))
+            {
+                var site = context.Sites.Create();
+                site.Name = "First Site in DB v.2";
+                site.MinimumBidIncrement = 123.4;
+                site.SessionExpirationInSeconds = 10;
+                site.Timezone = 0;
+
+                context.Sites.Add(site);
+                context.SaveChanges();
+            }
+
+            using (var context = new AuctionSiteContext(ConnectionString)) {
+                var user = context.Users.Create();
+                user.Username = "First User";
+                user.SiteId = context.Sites.FirstOrDefault();
+                user.Password = "password";
+
+                context.Users.Add(user);
+                context.SaveChanges();
+            }
+
+            using (var context = new AuctionSiteContext(ConnectionString)) {
+                var session = context.Sessions.Create();
+                var user = context.Users.FirstOrDefault(p => p.UserId == 1);
+                var site = context.Sites.FirstOrDefault(s => s.SiteId == user.SiteId.SiteId);
+                session.User = user;
+                session.ValidUntil = DateTime.Now.AddSeconds(site.SessionExpirationInSeconds);
+
+                context.Sessions.Add(session);
+                context.SaveChanges();
+            }
+
+            using (var context = new AuctionSiteContext(ConnectionString)) {
+                var site = context.Sites.FirstOrDefault();
+
+                context.Sites.Remove(site);
+                context.SaveChanges();
             }
 
         }
+
     }
 }
