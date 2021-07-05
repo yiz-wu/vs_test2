@@ -31,10 +31,8 @@ namespace WU.Entity {
         public int? CurrentWinnerId { get; set; }
         public virtual User CurrentWinner { get; set; }
 
-
+        public double MaximumOffer { get; set; }
         private bool IAmDeleted = false;
-        private bool FirstBid = true;
-        private double MaximumOffer = 0;
 
 
 
@@ -56,10 +54,10 @@ namespace WU.Entity {
         DateTime IAuction.EndsOn => EndsOn;
 
         bool IAuction.BidOnAuction(ISession session, double offer) {
-            if (IAmDeleted)
-                throw new InvalidOperationException();
             UtilityMethods.CheckNumberOutOfRange(offer, nameof(offer), 0, double.MaxValue);
             UtilityMethods.CheckNullArgument(session, nameof(session));
+            if (IAmDeleted)
+                throw new InvalidOperationException();
 
             Session mySession;
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
@@ -88,6 +86,9 @@ namespace WU.Entity {
 
                 // I cannot undestand the certain points of this auction system but whatever
 
+                var me = context.Auctions.FirstOrDefault(a => a.AuctionId == AuctionId);
+                bool FirstBid = me.CurrentWinnerId == default;
+
                 // 1st reject condition
                 if (mySession.UserId == CurrentWinnerId && offer < MaximumOffer + site.MinimumBidIncrement)
                     return false;
@@ -100,34 +101,44 @@ namespace WU.Entity {
                 if (mySession.UserId != CurrentWinnerId && offer <= CurrentPrice + site.MinimumBidIncrement && !FirstBid)
                     return false;
 
+
+                var winner = context.Users.FirstOrDefault(u => u.UserId == mySession.UserId);
+
                 // 1st accept case
-                if (FirstBid && offer >= CurrentPrice)
+                if (FirstBid && offer >= me.CurrentPrice)
                 {
-                    FirstBid = false;
-                    MaximumOffer = offer;
-                    CurrentWinnerId = mySession.UserId;
+                    me.MaximumOffer = offer;
+                    me.CurrentWinnerId = winner.UserId;
+                    me.CurrentWinner = winner;
+                    context.SaveChanges();
                     return true;
                 }
 
                 // 2nd accept case
-                if (mySession.UserId == CurrentWinnerId)
+                if (mySession.UserId == me.CurrentWinnerId)
                 {
-                    MaximumOffer = offer;
+                    me.MaximumOffer = offer;
+                    context.SaveChanges();
                     return true;
                 }
 
                 // 3rd accept case
-                if (!FirstBid && mySession.UserId != CurrentWinnerId && offer > MaximumOffer) {
-                    CurrentPrice = Math.Min(MaximumOffer + site.MinimumBidIncrement, offer);
-                    MaximumOffer = offer;
-                    CurrentWinnerId = mySession.UserId;
+                if (!FirstBid && mySession.UserId != me.CurrentWinnerId && offer > me.MaximumOffer) {
+                    me.CurrentPrice = Math.Min(me.MaximumOffer + site.MinimumBidIncrement, offer);
+                    me.MaximumOffer = offer;
+                    me.CurrentWinnerId = winner.UserId;
+                    me.CurrentWinner = winner;
+                    context.SaveChanges();
                     return true;
                 }
 
                 // 4rd accept case
-                if (!FirstBid && mySession.UserId != CurrentWinnerId && offer <= MaximumOffer)
+                if (!FirstBid && mySession.UserId != me.CurrentWinnerId && offer <= me.MaximumOffer)
                 {
-                    CurrentPrice = Math.Min(MaximumOffer, offer + site.MinimumBidIncrement);
+                    me.CurrentPrice = Math.Min(me.MaximumOffer, offer + site.MinimumBidIncrement);
+                    me.CurrentWinnerId = winner.UserId;
+                    me.CurrentWinner = winner;
+                    context.SaveChanges();
                     return true;
                 }
                 

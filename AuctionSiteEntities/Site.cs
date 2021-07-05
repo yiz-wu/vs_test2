@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
+using TAP2018_19.AlarmClock.Interfaces;
 using TAP2018_19.AuctionSite.Interfaces;
 using WU.Utilities;
 
@@ -28,7 +29,7 @@ namespace WU.Entity
         public int SessionExpirationInSeconds { get; set; }
 
         private bool IAmDeleted = false;
-
+        private IAlarmClock alarmClock;
         string ISite.Name => Name;
         int ISite.Timezone => Timezone;
         int ISite.SessionExpirationInSeconds => SessionExpirationInSeconds;
@@ -40,7 +41,8 @@ namespace WU.Entity
                 throw new InvalidOperationException();
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
             {
-                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+//                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+                var NowTimeOfSite = alarmClock.Now;
                 var expiredSessions = context.Sessions.Where(s=> s.SiteId == SiteId
                                                                 && s.ValidUntil.CompareTo(NowTimeOfSite)<0);
                 foreach (var session in expiredSessions)
@@ -100,7 +102,8 @@ namespace WU.Entity
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
             {
                 if (onlyNotEnded) {
-                    var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+//                    var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+                    var NowTimeOfSite = alarmClock.Now;
                     return context.Auctions.Where(a => a.SiteId == SiteId && a.EndsOn.CompareTo(NowTimeOfSite) > 0)
                         .ToList();
                 }
@@ -115,7 +118,8 @@ namespace WU.Entity
                 throw new InvalidOperationException();
 
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
-                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+//                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+                var NowTimeOfSite = alarmClock.Now;
                 // looks for valid session on this site with that sessionId
                 var session = context.Sessions.FirstOrDefault(s => s.SessionId == sessionId 
                                                                    && s.SiteId == SiteId
@@ -169,7 +173,8 @@ namespace WU.Entity
                 // 2. try to get user's session
                 session = context.Sessions.FirstOrDefault(s=> s.UserId == user.UserId && s.SiteId == this.SiteId);
 
-                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+//                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
+                var NowTimeOfSite = alarmClock.Now;
 
                 // if session not present create one and return it
                 if (session == default) {
@@ -182,11 +187,23 @@ namespace WU.Entity
                     context.Sessions.Add(session);
                     context.SaveChanges();
                     return session;
-                } 
+                }
 
-                // if session is present but not valid, reset ID
-                if(session.ValidUntil.CompareTo(NowTimeOfSite) <0)
-                    session.SessionId = Session.sessionIdPool++.ToString();
+                // if session is present but not valid, delete it and recreate one
+                if (session.ValidUntil.CompareTo(NowTimeOfSite) < 0)
+                {
+                    var newSession = context.Sessions.Create();
+                    newSession.SiteId = SiteId;
+                    newSession.UserId = user.UserId;
+                    newSession.SessionId = Session.sessionIdPool++.ToString();
+                    newSession.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
+                    newSession.SessionId = Session.sessionIdPool++.ToString();
+
+                    context.Sessions.Add(newSession);
+                    context.Sessions.Remove(session);
+                    context.SaveChanges();
+                    return newSession;
+                }
 
                 // reset ValidUntil time then return it
                 session.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
@@ -194,6 +211,10 @@ namespace WU.Entity
                 return session;
             }
 
+        }
+
+        public void SetAlarmClock(IAlarmClock newAlarmClock) {
+            this.alarmClock = newAlarmClock;
         }
 
         public override bool Equals(object obj)

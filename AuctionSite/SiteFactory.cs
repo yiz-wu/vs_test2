@@ -98,10 +98,12 @@ namespace WU.AuctionSite {
                 using (var context = new AuctionSiteContext(connectionString))
                 {
                     site = context.Sites.First(s => s.Name == name);
+                    if (alarmClock.Timezone != site.Timezone)
+                        throw new ArgumentException();
+                    ((Site) site).SetAlarmClock(alarmClock);
+                    context.SaveChanges();
                 }
 
-                if (alarmClock.Timezone != site.Timezone)
-                    throw new ArgumentException(nameof(alarmClock.Timezone));
 
                 var alarm = alarmClock.InstantiateAlarm(5 * 60 * 1000);
                 alarm.RingingEvent += site.CleanupSessions;
