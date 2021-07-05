@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,13 +18,17 @@ namespace WU.Entity {
         public virtual Site OfSite { get; set; }
         [Required]
         public DateTime EndsOn { get; set; }
+
         [Required] 
+        [ForeignKey("Seller")]
         public int SellerId { get; set; }
         public virtual User Seller { get; set; }
+
         [Required]
         public double CurrentPrice { get; set; }
 
-        public int CurrentWinnerId { get; set; }
+        [ForeignKey("CurrentWinner")]
+        public int? CurrentWinnerId { get; set; }
         public virtual User CurrentWinner { get; set; }
 
 
@@ -35,7 +40,16 @@ namespace WU.Entity {
 
         int IAuction.Id => AuctionId;
 
-        IUser IAuction.Seller => Seller;
+        IUser IAuction.Seller {
+            get
+            {
+                using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+                {
+                    var user = context.Users.First(u => u.UserId == SellerId);
+                    return user;
+                }
+            }
+        }
 
         string IAuction.Description => Description;
 
@@ -61,9 +75,10 @@ namespace WU.Entity {
 
 
             DateTime NowTimeOfSite;
-            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) 
             {
-                NowTimeOfSite = DateTime.UtcNow.AddHours(OfSite.Timezone);
+                var site = context.Sites.FirstOrDefault(s => s.SiteId == SiteId);
+                NowTimeOfSite = DateTime.UtcNow.AddHours(site.Timezone);
 
                 // auction already closed
                 if(EndsOn.CompareTo(NowTimeOfSite) < 0)
@@ -74,7 +89,7 @@ namespace WU.Entity {
                 // I cannot undestand the certain points of this auction system but whatever
 
                 // 1st reject condition
-                if (mySession.UserId == CurrentWinnerId && offer < MaximumOffer + OfSite.MinimumBidIncrement)
+                if (mySession.UserId == CurrentWinnerId && offer < MaximumOffer + site.MinimumBidIncrement)
                     return false;
 
                 // 2nd reject condition
@@ -82,7 +97,7 @@ namespace WU.Entity {
                     return false;
 
                 // 3rd reject condition
-                if (mySession.UserId != CurrentWinnerId && offer <= CurrentPrice + OfSite.MinimumBidIncrement && !FirstBid)
+                if (mySession.UserId != CurrentWinnerId && offer <= CurrentPrice + site.MinimumBidIncrement && !FirstBid)
                     return false;
 
                 // 1st accept case
@@ -103,7 +118,7 @@ namespace WU.Entity {
 
                 // 3rd accept case
                 if (!FirstBid && mySession.UserId != CurrentWinnerId && offer > MaximumOffer) {
-                    CurrentPrice = Math.Min(MaximumOffer + OfSite.MinimumBidIncrement, offer);
+                    CurrentPrice = Math.Min(MaximumOffer + site.MinimumBidIncrement, offer);
                     MaximumOffer = offer;
                     CurrentWinnerId = mySession.UserId;
                     return true;
@@ -112,7 +127,7 @@ namespace WU.Entity {
                 // 4rd accept case
                 if (!FirstBid && mySession.UserId != CurrentWinnerId && offer <= MaximumOffer)
                 {
-                    CurrentPrice = Math.Min(MaximumOffer, offer + OfSite.MinimumBidIncrement);
+                    CurrentPrice = Math.Min(MaximumOffer, offer + site.MinimumBidIncrement);
                     return true;
                 }
                 
@@ -125,14 +140,17 @@ namespace WU.Entity {
         double IAuction.CurrentPrice() {
             if (IAmDeleted)
                 throw new InvalidOperationException();
-            throw new NotImplementedException();
+            return CurrentPrice;
         }
 
         IUser IAuction.CurrentWinner() {
             if (IAmDeleted)
                 throw new InvalidOperationException();
-
-            return CurrentWinner;
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                var winner = context.Users.FirstOrDefault(u => u.UserId == CurrentWinnerId);
+                return winner;
+            }
         }
 
         void IAuction.Delete() {

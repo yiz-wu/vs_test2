@@ -36,7 +36,16 @@ namespace WU.Entity {
 
         DateTime ISession.ValidUntil => ValidUntil;
 
-        IUser ISession.User => OfUser;
+        IUser ISession.User {
+            get
+            {
+                using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+                {
+                    var user = context.Users.First(u => u.UserId == UserId);
+                    return user;
+                }
+            }
+        }
 
         IAuction ISession.CreateAuction(string description, DateTime endsOn, double startingPrice) {
             if (!isValid)
@@ -58,6 +67,7 @@ namespace WU.Entity {
                 NewAuction.Description = description;
                 NewAuction.CurrentPrice = startingPrice;
                 NewAuction.EndsOn = endsOn;
+//                NewAuction.CurrentWinner = null;
 
                 context.Auctions.Add(NewAuction);
                 context.SaveChanges();
@@ -71,10 +81,10 @@ namespace WU.Entity {
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
             {
                 var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
-
+                var site = context.Sites.FirstOrDefault(s => s.SiteId == SiteId);
                 // reset ValidUntil time
-                var NowTimeOfSite = DateTime.UtcNow.AddHours(OfSite.Timezone);
-                me.ValidUntil = NowTimeOfSite.AddSeconds(OfSite.SessionExpirationInSeconds);
+                var NowTimeOfSite = DateTime.UtcNow.AddHours(site.Timezone);
+                me.ValidUntil = NowTimeOfSite.AddSeconds(site.SessionExpirationInSeconds);
 
                 context.SaveChanges();
             }
@@ -86,6 +96,7 @@ namespace WU.Entity {
 
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
                 var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
+                var site = context.Sites.FirstOrDefault(s => s.SiteId == SiteId);
                 // if this session does not exist in DB, I do not know why this would happen
                 if (me == default) {
                     isValid = false;
@@ -93,7 +104,7 @@ namespace WU.Entity {
                 }
 
                 // if this session is still valid -> return true
-                if (me.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(OfSite.Timezone)) > 0)
+                if (me.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(site.Timezone)) > 0)
                     return isValid;
                 
                 // otherwise delete itself

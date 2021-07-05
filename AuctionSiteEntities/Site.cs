@@ -40,8 +40,9 @@ namespace WU.Entity
                 throw new InvalidOperationException();
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
             {
+                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
                 var expiredSessions = context.Sessions.Where(s=> s.SiteId == SiteId
-                                                                && s.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(Timezone))<0).ToList();
+                                                                && s.ValidUntil.CompareTo(NowTimeOfSite)<0);
                 foreach (var session in expiredSessions)
                     context.Sessions.Remove(session);
 
@@ -177,6 +178,7 @@ namespace WU.Entity
                     session.UserId = user.UserId;
                     session.SessionId = Session.sessionIdPool++.ToString();
                     session.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
+
                     context.Sessions.Add(session);
                     context.SaveChanges();
                     return session;

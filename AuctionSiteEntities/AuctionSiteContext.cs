@@ -38,6 +38,10 @@ namespace WU.Entity
                 .HasRequired(a => a.CurrentWinner)
                 .WithMany()
                 .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Auction>()
+                .HasOptional<User>(a => a.CurrentWinner)
+                .WithOptionalPrincipal();
         }
 
         public DbSet<Site> Sites { get; set; }
