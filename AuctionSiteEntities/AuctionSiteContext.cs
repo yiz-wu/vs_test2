@@ -25,10 +25,7 @@ namespace WU.Entity
                 .HasRequired(s => s.OfSite)
                 .WithMany()
                 .WillCascadeOnDelete(false);
-
-            // modelBuilder.Entity<User>()
-            //     .HasIndex(u => new {u.Username, u.SiteId})
-            //     .IsUnique();
+            
         }
 
         public DbSet<Site> Sites { get; set; }
