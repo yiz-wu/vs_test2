@@ -1154,6 +1154,7 @@ namespace TAP2018_19.AuctionSite.Interfaces.Tests
             Mock<IAlarm> alarmMoq;
             var site = CreateAndLoadSite(timeZone, siteName, sessionExpirationTimeInSeconds, minimumBidIncrement,
                 usernameList, usernameList, 0, out sessions, out alarmClockMoq, out alarmMoq);
+
             var initialExpiringTime = sessions.SingleOrDefault(s => s.User.Username == uniqueUser).ValidUntil;
             alarmClockMoq.Setup(a => a.Now).Returns(initialExpiringTime.AddSeconds(1));
             alarmMoq.Raise(m => m.RingingEvent += null);

@@ -14,10 +14,17 @@ namespace WU {
         private const string ConnectionString =
             @"Data Source=.\SQLEXPRESS;Initial Catalog=FirstAuctionSiteDB;Integrated Security=True;";
 
-        static void Main(string[] args) {
+        static void Main(string[] args)
+        {
 
+            Console.WriteLine("UTC :" +DateTime.UtcNow);
+            Console.WriteLine("Now :" + DateTime.Now);
+            Console.ReadLine();
+
+
+            /*
             Console.WriteLine(AuctionSiteContext.ConnectionStrings);
-
+            
             using (var context = new AuctionSiteContext(ConnectionString))
             {
                 context.Database.Delete();
@@ -26,7 +33,7 @@ namespace WU {
 
             Console.WriteLine(AuctionSiteContext.ConnectionStrings);
 
-            /*
+            
             
             try
             {
@@ -41,7 +48,9 @@ namespace WU {
             }
 
             Console.WriteLine(AuctionSiteContext.ConnectionStrings);
-            */
+            
+
+            
             using (var context = new AuctionSiteContext(ConnectionString)) {
                 var site = context.Sites.Create();
                 site.Name = "First Site in DB v.2";
@@ -52,17 +61,6 @@ namespace WU {
                 context.Sites.Add(site);
                 context.SaveChanges();
             }
-            using (var context = new AuctionSiteContext(ConnectionString)) {
-                var site = context.Sites.Create();
-                site.Name = "First Site in DB v.3";
-                site.MinimumBidIncrement = 123.4;
-                site.SessionExpirationInSeconds = 10;
-                site.Timezone = 0;
-
-                context.Sites.Add(site);
-                context.SaveChanges();
-            }
-
             Console.WriteLine(AuctionSiteContext.ConnectionStrings);
 
             
@@ -75,8 +73,29 @@ namespace WU {
                 context.Users.Add(user);
                 context.SaveChanges();
             }
+            using (var context = new AuctionSiteContext(ConnectionString)) {
+                var user = context.Users.Create();
+                user.Username = "Second User";
+                user.Site = context.Sites.FirstOrDefault();
+                user.Password = "password";
 
-            /*
+                context.Users.Add(user);
+                context.SaveChanges();
+            }
+            using (var context = new AuctionSiteContext(ConnectionString))
+            {
+                foreach (var user in context.Users)
+                {
+                    Console.WriteLine(user.Username + " - " + user.Password);
+                }
+            
+            }
+
+            Console.WriteLine("end");
+            Console.ReadLine();
+
+            
+            
             using (var context = new AuctionSiteContext(ConnectionString)) {
                 var session = context.Sessions.Create();
                 var user = context.Users.FirstOrDefault(p => p.UserId == 1);

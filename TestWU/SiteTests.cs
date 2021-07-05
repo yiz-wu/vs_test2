@@ -250,7 +250,7 @@ namespace TAP2018_19.AuctionSite.Interfaces.Tests {
             var session = Site.Login(username, password);
             Assert.That(session.ValidUntil,
                 Is.InRange(AlarmClock.Object.Now.AddSeconds(Site.SessionExpirationInSeconds - 5),
-                    AlarmClock.Object.Now.AddSeconds(Site.SessionExpirationInSeconds + 5)));
+                           AlarmClock.Object.Now.AddSeconds(Site.SessionExpirationInSeconds + 5)));
         }
         /// <summary>
         /// Verify that two calls to login for the same user return the same object

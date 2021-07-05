@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TAP2018_19.AuctionSite.Interfaces;
+using WU.Utilities;
 
 namespace WU.Entity {
     public class User : IUser{
@@ -22,30 +23,60 @@ namespace WU.Entity {
         public int SiteId { get; set; }
         public virtual Site Site { get; set; }
 
+
         [Required]
-        public string PasswordStored { get; set; }
+        public virtual string PasswordStored { get; set; }
+        [Required]
         [NotMapped]
         [MinLength(DomainConstraints.MinUserPassword)]
         public string Password {
             get { return PasswordStored; }
             set
             {
-                var passAndSalt = value + UserId.ToString();
-                using (var hashSystem = System.Security.Cryptography.SHA256.Create())
-                {
-                    PasswordStored = hashSystem.ComputeHash(Encoding.ASCII.GetBytes(passAndSalt)).ToString();
-                }
+                // PasswordStored = UtilityMethods.EncryptPasswordGivenUsername(value, Username);
+                PasswordStored = UtilityMethods.GetHashString(value);
             }
         }
+
+        private bool IAmDeleted = false;
 
         string IUser.Username => Username;
 
         IEnumerable<IAuction> IUser.WonAuctions() {
-            throw new NotImplementedException();
+            if (IAmDeleted)
+                throw new InvalidOperationException();
+
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                var wonAuctions = context.Auctions.Where(a => a.CurrentWinnerId == UserId && a.EndsOn.CompareTo(DateTime.Now) < 0)
+                    .ToList();
+                return wonAuctions;
+            }
+
         }
 
         void IUser.Delete() {
-            throw new NotImplementedException();
+            if (IAmDeleted)
+                throw new InvalidOperationException();
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
+                context.Users.Attach(this);
+                context.Users.Remove(this);
+                context.SaveChanges();
+            }
+
+            IAmDeleted = true;
+        }
+
+        public override bool Equals(object obj) {
+            if (obj == null)
+                return false;
+
+            User user = obj as User;
+            return Username.Equals(user.Username) && SiteId.Equals(user.SiteId);
+        }
+
+        public override int GetHashCode() {
+            return SiteId.GetHashCode() + Username.GetHashCode();
         }
     }
 }

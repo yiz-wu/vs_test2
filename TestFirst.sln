@@ -5,11 +5,13 @@ VisualStudioVersion = 16.0.31321.278
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WU", "WU\WU.csproj", "{640E8B8A-8837-4A4D-819E-4A79F4CC1F3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWU", "TestWU\TestWU.csproj", "{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMinimale", "TestWU\TestMinimale.csproj", "{C3AE3ADF-BE3B-4592-AE81-87189C3486AD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionSiteEntity", "AuctionSiteEntities\AuctionSiteEntity.csproj", "{A16CF21F-6608-4FF0-B9CD-F8010B359E7F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionSite", "AuctionSite\AuctionSite.csproj", "{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilityMethod", "UtilityMethod\UtilityMethod.csproj", "{D5CE24CF-650C-4A9B-A56F-86E44348B106}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1EAAA7B3-EBF8-4CE2-91BC-334C34CA0DB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5CE24CF-650C-4A9B-A56F-86E44348B106}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5CE24CF-650C-4A9B-A56F-86E44348B106}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5CE24CF-650C-4A9B-A56F-86E44348B106}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5CE24CF-650C-4A9B-A56F-86E44348B106}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

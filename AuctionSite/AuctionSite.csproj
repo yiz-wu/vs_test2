@@ -62,12 +62,15 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SiteFactory.cs" />
-    <Compile Include="UtilityMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AuctionSiteEntities\AuctionSiteEntity.csproj">
       <Project>{a16cf21f-6608-4ff0-b9cd-f8010b359e7f}</Project>
       <Name>AuctionSiteEntity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UtilityMethod\UtilityMethod.csproj">
+      <Project>{d5ce24cf-650c-4a9b-a56f-86e44348b106}</Project>
+      <Name>UtilityMethod</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

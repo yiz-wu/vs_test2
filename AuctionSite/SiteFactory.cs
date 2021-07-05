@@ -37,9 +37,11 @@ namespace WU.AuctionSite {
             }
             catch (Exception e)
             {
-                SqlException inner = (SqlException) e.InnerException.InnerException;
-                if (inner.Number == 2601)
-                    throw new NameAlreadyInUseException(name, MethodBase.GetCurrentMethod().Name, e);
+                if (e.InnerException != null && e.InnerException.InnerException != null) {
+                    SqlException inner = (SqlException)e.InnerException.InnerException;
+                    if (inner.Number == 2601)
+                        throw new NameAlreadyInUseException(name, MethodBase.GetCurrentMethod().Name, e);
+                }
 
                 throw new UnavailableDbException(MethodBase.GetCurrentMethod().Name, e);
             }
@@ -101,6 +103,9 @@ namespace WU.AuctionSite {
                 if (alarmClock.Timezone != site.Timezone)
                     throw new ArgumentException(nameof(alarmClock.Timezone));
 
+                var alarm = alarmClock.InstantiateAlarm(5 * 60 * 1000);
+                alarm.RingingEvent += site.CleanupSessions;
+
                 return site;
             }
             catch (InvalidOperationException e)
@@ -108,7 +113,7 @@ namespace WU.AuctionSite {
                 throw new InexistentNameException(name, MethodBase.GetCurrentMethod().Name, e);
             }
             catch (ArgumentException e) {
-                throw;
+                throw e;
             }
             catch (Exception e) {
                 throw new UnavailableDbException(MethodBase.GetCurrentMethod().Name, e);
@@ -133,10 +138,14 @@ namespace WU.AuctionSite {
         }
     }
 
-    public class SiteFactoryModule : NinjectModule {
+    public class AuctionSiteModule : NinjectModule {
         public override void Load()
         {
-            this.Bind<ISiteFactory>().To<SiteFactory>();
+            Bind<ISiteFactory>().To<SiteFactory>();
+            Bind<ISite>().To<Site>();
+            Bind<IUser>().To<User>();
+            Bind<ISession>().To<Session>();
+            Bind<IAuction>().To<Auction>();
         }
     }
 }

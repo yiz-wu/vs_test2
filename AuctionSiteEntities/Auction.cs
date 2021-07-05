@@ -5,19 +5,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TAP2018_19.AuctionSite.Interfaces;
+using WU.Utilities;
 
 namespace WU.Entity {
     public class Auction : IAuction{
         public int AuctionId { get; set; }
         [Required]
         public string Description { get; set; }
+        [Required] 
+        public int SiteId { get; set; }
+        public virtual Site OfSite { get; set; }
         [Required]
         public DateTime EndsOn { get; set; }
-        [Required]
+        [Required] 
+        public int SellerId { get; set; }
         public virtual User Seller { get; set; }
         [Required]
         public double CurrentPrice { get; set; }
+
+        public int CurrentWinnerId { get; set; }
         public virtual User CurrentWinner { get; set; }
+
+
+        private bool IAmDeleted = false;
+        private bool FirstBid = true;
+        private double MaximumOffer = 0;
+
+
 
         int IAuction.Id => AuctionId;
 
@@ -28,19 +42,122 @@ namespace WU.Entity {
         DateTime IAuction.EndsOn => EndsOn;
 
         bool IAuction.BidOnAuction(ISession session, double offer) {
-            throw new NotImplementedException();
+            if (IAmDeleted)
+                throw new InvalidOperationException();
+            UtilityMethods.CheckNumberOutOfRange(offer, nameof(offer), 0, double.MaxValue);
+            UtilityMethods.CheckNullArgument(session, nameof(session));
+
+            Session mySession;
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
+                mySession = context.Sessions.First(s => s.SessionId == session.Id);
+            }
+
+            if (!session.IsValid())
+                throw new ArgumentException("Session expired");
+            if (mySession.UserId == SellerId)
+                throw new ArgumentException("Logged user is the seller");
+            if (mySession.SiteId != SiteId)
+                throw new ArgumentException("Logged user is not user of this site");
+
+
+            DateTime NowTimeOfSite;
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                NowTimeOfSite = DateTime.UtcNow.AddHours(OfSite.Timezone);
+
+                // auction already closed
+                if(EndsOn.CompareTo(NowTimeOfSite) < 0)
+                    throw new InvalidOperationException();
+
+                mySession.ResetExpirationTime();
+
+                // I cannot undestand the certain points of this auction system but whatever
+
+                // 1st reject condition
+                if (mySession.UserId == CurrentWinnerId && offer < MaximumOffer + OfSite.MinimumBidIncrement)
+                    return false;
+
+                // 2nd reject condition
+                if (mySession.UserId != CurrentWinnerId && offer <= CurrentPrice)
+                    return false;
+
+                // 3rd reject condition
+                if (mySession.UserId != CurrentWinnerId && offer <= CurrentPrice + OfSite.MinimumBidIncrement && !FirstBid)
+                    return false;
+
+                // 1st accept case
+                if (FirstBid && offer >= CurrentPrice)
+                {
+                    FirstBid = false;
+                    MaximumOffer = offer;
+                    CurrentWinnerId = mySession.UserId;
+                    return true;
+                }
+
+                // 2nd accept case
+                if (mySession.UserId == CurrentWinnerId)
+                {
+                    MaximumOffer = offer;
+                    return true;
+                }
+
+                // 3rd accept case
+                if (!FirstBid && mySession.UserId != CurrentWinnerId && offer > MaximumOffer) {
+                    CurrentPrice = Math.Min(MaximumOffer + OfSite.MinimumBidIncrement, offer);
+                    MaximumOffer = offer;
+                    CurrentWinnerId = mySession.UserId;
+                    return true;
+                }
+
+                // 4rd accept case
+                if (!FirstBid && mySession.UserId != CurrentWinnerId && offer <= MaximumOffer)
+                {
+                    CurrentPrice = Math.Min(MaximumOffer, offer + OfSite.MinimumBidIncrement);
+                    return true;
+                }
+                
+            }
+
+            return false;
+
         }
 
         double IAuction.CurrentPrice() {
+            if (IAmDeleted)
+                throw new InvalidOperationException();
             throw new NotImplementedException();
         }
 
         IUser IAuction.CurrentWinner() {
-            throw new NotImplementedException();
+            if (IAmDeleted)
+                throw new InvalidOperationException();
+
+            return CurrentWinner;
         }
 
         void IAuction.Delete() {
-            throw new NotImplementedException();
+            if (IAmDeleted)
+                throw new InvalidOperationException();
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
+                context.Auctions.Attach(this);
+                context.Auctions.Remove(this);
+                context.SaveChanges();
+            }
+
+            IAmDeleted = true;
+        }
+
+
+        public override bool Equals(object obj) {
+            if (obj == null)
+                return false;
+
+            Auction auction = obj as Auction;
+            return AuctionId.Equals(auction.AuctionId) && SiteId.Equals(auction.SiteId);
+        }
+
+        public override int GetHashCode() {
+            return AuctionId.GetHashCode() + SiteId.GetHashCode();
         }
     }
 }

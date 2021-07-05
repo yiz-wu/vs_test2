@@ -6,9 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TAP2018_19.AuctionSite.Interfaces;
+using WU.Utilities;
 
 namespace WU.Entity {
-    public class Session : ISession{
+    public class Session : ISession
+    {
+        // dato che il nostro AuctionSite ricrea DB ogni volta, posso inizializzarlo sempre a 0
+        [NotMapped]
+        public static int sessionIdPool = 0;
+
+
         [Key]
         public string SessionId { get; set; }
         [Required] 
@@ -21,6 +28,10 @@ namespace WU.Entity {
         [Required]
         public DateTime ValidUntil { get; set; }
 
+
+        private bool isValid = true;
+
+
         string ISession.Id => SessionId;
 
         DateTime ISession.ValidUntil => ValidUntil;
@@ -28,15 +39,98 @@ namespace WU.Entity {
         IUser ISession.User => OfUser;
 
         IAuction ISession.CreateAuction(string description, DateTime endsOn, double startingPrice) {
-            throw new NotImplementedException();
+            if (!isValid)
+                throw new InvalidOperationException();
+
+            UtilityMethods.CheckNullArgument(description, nameof(description));
+            UtilityMethods.CheckStringLength(description, nameof(description), 0, int.MaxValue);
+            UtilityMethods.CheckNumberOutOfRange(startingPrice, nameof(startingPrice), 0, double.MaxValue);
+
+
+            ResetExpirationTime();
+
+            Auction NewAuction;
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                NewAuction = context.Auctions.Create();
+                NewAuction.SiteId = SiteId;
+                NewAuction.SellerId = UserId;
+                NewAuction.Description = description;
+                NewAuction.CurrentPrice = startingPrice;
+                NewAuction.EndsOn = endsOn;
+
+                context.Auctions.Add(NewAuction);
+                context.SaveChanges();
+            }
+
+            return NewAuction;
+        }
+
+        public void ResetExpirationTime()
+        {
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
+
+                // reset ValidUntil time
+                var NowTimeOfSite = DateTime.UtcNow.AddHours(OfSite.Timezone);
+                me.ValidUntil = NowTimeOfSite.AddSeconds(OfSite.SessionExpirationInSeconds);
+
+                context.SaveChanges();
+            }
         }
 
         bool ISession.IsValid() {
-            throw new NotImplementedException();
+            if (!isValid)
+                throw new InvalidOperationException();
+
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
+                var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
+                // if this session does not exist in DB, I do not know why this would happen
+                if (me == default) {
+                    isValid = false;
+                    return isValid;
+                }
+
+                // if this session is still valid -> return true
+                if (me.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(OfSite.Timezone)) > 0)
+                    return isValid;
+                
+                // otherwise delete itself
+                isValid = false;
+                context.Sessions.Remove(me);
+                context.SaveChanges();
+            }
+
+            return isValid;
         }
 
-        void ISession.Logout() {
-            throw new NotImplementedException();
+        void ISession.Logout()
+        {
+            if (!isValid)
+                throw new InvalidOperationException();
+
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                var me = context.Sessions.First(s => s.SessionId == SessionId);
+                context.Sessions.Remove(me);
+                context.SaveChanges();
+            }
+            
+            isValid = false;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            Session session = obj as Session;
+            return this.SessionId.Equals(session.SessionId);
+        }
+
+        public override int GetHashCode() {
+            return this.SessionId.GetHashCode();
         }
     }
 }

@@ -21,11 +21,23 @@ namespace WU.Entity
         {
             base.OnModelCreating(modelBuilder);
 
+            // delete "On Delete Cascade" for Session's FK to Site
+            // unnecessary because deleting Site, all User will be deleted too,
+            //                 and deleting Users, Session will be deleted too
             modelBuilder.Entity<Session>()
                 .HasRequired(s => s.OfSite)
                 .WithMany()
                 .WillCascadeOnDelete(false);
-            
+
+            modelBuilder.Entity<Auction>()
+                .HasRequired(a => a.OfSite)
+                .WithMany()
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Auction>()
+                .HasRequired(a => a.CurrentWinner)
+                .WithMany()
+                .WillCascadeOnDelete(false);
         }
 
         public DbSet<Site> Sites { get; set; }

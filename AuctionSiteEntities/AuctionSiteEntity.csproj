@@ -69,6 +69,12 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UtilityMethod\UtilityMethod.csproj">
+      <Project>{d5ce24cf-650c-4a9b-a56f-86e44348b106}</Project>
+      <Name>UtilityMethod</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
