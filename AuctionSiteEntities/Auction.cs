@@ -34,7 +34,6 @@ namespace WU.Entity {
 
         public double MaximumOffer { get; set; }
         private bool IAmDeleted = false;
-        public IAlarmClock AlarmClock;
 
 
 
@@ -78,7 +77,7 @@ namespace WU.Entity {
             {
                 var site = context.Sites.FirstOrDefault(s => s.SiteId == SiteId);
                 mySession = context.Sessions.First(s => s.SessionId == session.Id);
-                DateTime NowTimeOfSite = AlarmClock.Now;
+                DateTime NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
                 // auction already closed
                 if(EndsOn.CompareTo(NowTimeOfSite) < 0)
                     throw new InvalidOperationException();

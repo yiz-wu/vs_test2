@@ -19,16 +19,7 @@ namespace WU.Utilities {
             if (number < minInclusive || number > maxInclusive)
                 throw new ArgumentOutOfRangeException(paramName);
         }
-
-        // make sure every time u create a new User, u have to define it's Username before Password
-        public static string EncryptPasswordGivenUsername(string password, string username) {
-            // there should be no way to change Username according to document, so I am using Username as salt
-            var passAndSalt = password + username;
-            using (var hashSystem = System.Security.Cryptography.SHA256.Create()) {
-                var hashInByteArr = hashSystem.ComputeHash(Encoding.Unicode.GetBytes(passAndSalt));
-                return Encoding.Unicode.GetString(hashInByteArr);
-            }
-        }
+        
         public static string GetHashString(string inputString) {
             StringBuilder sb = new StringBuilder();
             foreach (byte b in GetHash(inputString))

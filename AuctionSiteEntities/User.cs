@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TAP2018_19.AlarmClock.Interfaces;
 using TAP2018_19.AuctionSite.Interfaces;
 using WU.Utilities;
 
@@ -48,7 +49,11 @@ namespace WU.Entity {
 
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
             {
-                var wonAuctions = context.Auctions.Where(a => a.CurrentWinnerId == UserId && a.EndsOn.CompareTo(DateTime.Now) < 0)
+                var site = context.Sites.FirstOrDefault(s=>s.SiteId == SiteId);
+                var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
+
+                var wonAuctions = context.Auctions.Where(a => a.CurrentWinnerId == UserId 
+                                                              && a.EndsOn.CompareTo(NowTimeOfSite) < 0)
                     .ToList();
                 return wonAuctions;
             }
@@ -58,6 +63,17 @@ namespace WU.Entity {
         void IUser.Delete() {
             if (IAmDeleted)
                 throw new InvalidOperationException();
+            // check if I have auctions not ended yet
+            using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
+            {
+                var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
+                var NotEndedAuction = context.Auctions.FirstOrDefault(a => a.SellerId == UserId
+                                                                    && a.EndsOn.CompareTo(NowTimeOfSite) > 0);
+                if(NotEndedAuction != default)
+                    throw new InvalidOperationException();
+            }
+
+
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
                 context.Users.Attach(this);
                 context.Users.Remove(this);

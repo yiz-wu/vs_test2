@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -29,7 +30,9 @@ namespace WU.Entity
         public int SessionExpirationInSeconds { get; set; }
 
         private bool IAmDeleted = false;
-        private IAlarmClock alarmClock;
+        public IAlarmClock alarmClock;
+        public static Dictionary<int, IAlarmClock> AlarmClocks;
+        
 
 
         string ISite.Name => Name;
@@ -43,8 +46,7 @@ namespace WU.Entity
                 throw new InvalidOperationException();
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings))
             {
-//                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
-                var NowTimeOfSite = alarmClock.Now;
+                var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
                 var expiredSessions = context.Sessions.Where(s=> s.SiteId == SiteId
                                                                 && s.ValidUntil.CompareTo(NowTimeOfSite)<0);
                 foreach (var session in expiredSessions)
@@ -69,6 +71,7 @@ namespace WU.Entity
                     user.Username = username;
                     user.Password = password;
                     user.SiteId = SiteId;
+
 
                     context.Users.Add(user);
                     context.SaveChanges();
@@ -105,7 +108,7 @@ namespace WU.Entity
             {
                 if (onlyNotEnded) {
 //                    var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
-                    var NowTimeOfSite = alarmClock.Now;
+                    var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
                     return context.Auctions.Where(a => a.SiteId == SiteId && a.EndsOn.CompareTo(NowTimeOfSite) > 0)
                         .ToList();
                 }
@@ -121,7 +124,7 @@ namespace WU.Entity
 
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
 //                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
-                var NowTimeOfSite = alarmClock.Now;
+                var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
                 // looks for valid session on this site with that sessionId
                 var session = context.Sessions.FirstOrDefault(s => s.SessionId == sessionId 
                                                                    && s.SiteId == SiteId
@@ -165,7 +168,8 @@ namespace WU.Entity
             {
                 var hashedPassword = UtilityMethods.GetHashString(password);
                 user = context.Users.FirstOrDefault(u => u.Username == username
-                                                && u.PasswordStored == hashedPassword);
+                                                && u.PasswordStored == hashedPassword                                                                 
+                                                && u.SiteId == SiteId);
                 if (user == default)
                     return null;
             }
@@ -175,7 +179,7 @@ namespace WU.Entity
                 // 2. try to get user's session
                 session = context.Sessions.FirstOrDefault(s=> s.UserId == user.UserId && s.SiteId == this.SiteId);
 //                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
-                var NowTimeOfSite = alarmClock.Now;
+                var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
 
                 // if session not present create one and return it
                 if (session == default) {
@@ -184,7 +188,6 @@ namespace WU.Entity
                     session.UserId = user.UserId;
                     session.SessionId = Session.sessionIdPool++.ToString();
                     session.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
-                    session.AlarmClock = alarmClock;
 
                     context.Sessions.Add(session);
                     context.SaveChanges();
@@ -199,7 +202,6 @@ namespace WU.Entity
                     newSession.UserId = user.UserId;
                     newSession.SessionId = Session.sessionIdPool++.ToString();
                     newSession.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
-                    newSession.AlarmClock = alarmClock;
 
                     context.Sessions.Add(newSession);
                     context.Sessions.Remove(session);
@@ -214,10 +216,7 @@ namespace WU.Entity
             }
 
         }
-
-        public void SetAlarmClock(IAlarmClock newAlarmClock) {
-            this.alarmClock = newAlarmClock;
-        }
+        
 
         public override bool Equals(object obj)
         {

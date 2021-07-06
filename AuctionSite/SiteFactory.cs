@@ -18,8 +18,8 @@ namespace WU.AuctionSite {
             UtilityMethods.CheckNullArgument(name, nameof(name));
             UtilityMethods.CheckStringLength(name, nameof(name), DomainConstraints.MinSiteName, DomainConstraints.MaxSiteName);
             UtilityMethods.CheckNumberOutOfRange(timezone, nameof(timezone), DomainConstraints.MinTimeZone, DomainConstraints.MaxTimeZone);
-            UtilityMethods.CheckNumberOutOfRange(sessionExpirationTimeInSeconds, nameof(sessionExpirationTimeInSeconds), 0, double.PositiveInfinity);
-            UtilityMethods.CheckNumberOutOfRange(minimumBidIncrement, nameof(minimumBidIncrement), 0, double.PositiveInfinity);
+            UtilityMethods.CheckNumberOutOfRange(sessionExpirationTimeInSeconds, nameof(sessionExpirationTimeInSeconds), double.Epsilon, double.PositiveInfinity);
+            UtilityMethods.CheckNumberOutOfRange(minimumBidIncrement, nameof(minimumBidIncrement), double.Epsilon, double.PositiveInfinity);
 
             try
             {
@@ -94,19 +94,20 @@ namespace WU.AuctionSite {
 
             try
             {
-                ISite site;
+                Site site;
                 using (var context = new AuctionSiteContext(connectionString))
                 {
                     site = context.Sites.First(s => s.Name == name);
                     if (alarmClock.Timezone != site.Timezone)
                         throw new ArgumentException();
-                    ((Site) site).SetAlarmClock(alarmClock);
+                    if(!Site.AlarmClocks.ContainsKey(site.SiteId))
+                        Site.AlarmClocks.Add(site.SiteId, alarmClock);
                     context.SaveChanges();
                 }
 
 
                 var alarm = alarmClock.InstantiateAlarm(5 * 60 * 1000);
-                alarm.RingingEvent += site.CleanupSessions;
+                alarm.RingingEvent += ((ISite)site).CleanupSessions;
 
                 return site;
             }
@@ -131,6 +132,8 @@ namespace WU.AuctionSite {
                     context.Database.Delete();
                     context.Database.Create();
                 }
+
+                Site.AlarmClocks = new Dictionary<int, IAlarmClock>();
             }
             catch (Exception e)
             {

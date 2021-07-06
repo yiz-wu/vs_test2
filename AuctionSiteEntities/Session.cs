@@ -55,9 +55,10 @@ namespace WU.Entity {
                 throw new InvalidOperationException();
 
             UtilityMethods.CheckNullArgument(description, nameof(description));
-            UtilityMethods.CheckStringLength(description, nameof(description), 0, int.MaxValue);
+            UtilityMethods.CheckStringLength(description, nameof(description), 1, int.MaxValue);
             UtilityMethods.CheckNumberOutOfRange(startingPrice, nameof(startingPrice), 0, double.MaxValue);
-
+            if (Site.AlarmClocks[SiteId].Now.CompareTo(endsOn) > 0)
+                throw new UnavailableTimeMachineException("cannot create auction already closed.");
 
             ResetExpirationTime();
 
@@ -70,7 +71,6 @@ namespace WU.Entity {
                 NewAuction.Description = description;
                 NewAuction.CurrentPrice = startingPrice;
                 NewAuction.EndsOn = endsOn;
-                NewAuction.AlarmClock = AlarmClock;
 
                 context.Auctions.Add(NewAuction);
                 context.SaveChanges();
@@ -86,11 +86,12 @@ namespace WU.Entity {
                 var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
                 var site = context.Sites.FirstOrDefault(s => s.SiteId == SiteId);
                 // reset ValidUntil time
-                var NowTimeOfSite = AlarmClock.Now.AddHours(site.Timezone);
+                var NowTimeOfSite = Site.AlarmClocks[SiteId].Now;
                 me.ValidUntil = NowTimeOfSite.AddSeconds(site.SessionExpirationInSeconds);
-
+                ValidUntil = NowTimeOfSite.AddSeconds(site.SessionExpirationInSeconds);
                 context.SaveChanges();
             }
+
         }
 
         bool ISession.IsValid()
@@ -109,7 +110,7 @@ namespace WU.Entity {
 
                 // if this session is still valid -> return true
                 //                if (me.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(site.Timezone)) > 0)
-                if (me.ValidUntil.CompareTo(AlarmClock.Now) > 0)
+                if (me.ValidUntil.CompareTo(Site.AlarmClocks[SiteId].Now) > 0)
                     return isValid;
                 
                 // otherwise delete itself
