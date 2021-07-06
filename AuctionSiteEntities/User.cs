@@ -72,6 +72,8 @@ namespace WU.Entity {
                 return false;
 
             User user = obj as User;
+
+
             return Username.Equals(user.Username) && SiteId.Equals(user.SiteId);
         }
 

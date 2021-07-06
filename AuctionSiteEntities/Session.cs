@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TAP2018_19.AlarmClock.Interfaces;
 using TAP2018_19.AuctionSite.Interfaces;
 using WU.Utilities;
 
@@ -30,6 +31,8 @@ namespace WU.Entity {
 
 
         private bool isValid = true;
+        public IAlarmClock AlarmClock;
+
 
 
         string ISession.Id => SessionId;
@@ -67,7 +70,7 @@ namespace WU.Entity {
                 NewAuction.Description = description;
                 NewAuction.CurrentPrice = startingPrice;
                 NewAuction.EndsOn = endsOn;
-//                NewAuction.CurrentWinner = null;
+                NewAuction.AlarmClock = AlarmClock;
 
                 context.Auctions.Add(NewAuction);
                 context.SaveChanges();
@@ -83,16 +86,17 @@ namespace WU.Entity {
                 var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
                 var site = context.Sites.FirstOrDefault(s => s.SiteId == SiteId);
                 // reset ValidUntil time
-                var NowTimeOfSite = DateTime.UtcNow.AddHours(site.Timezone);
+                var NowTimeOfSite = AlarmClock.Now.AddHours(site.Timezone);
                 me.ValidUntil = NowTimeOfSite.AddSeconds(site.SessionExpirationInSeconds);
 
                 context.SaveChanges();
             }
         }
 
-        bool ISession.IsValid() {
+        bool ISession.IsValid()
+        {
             if (!isValid)
-                throw new InvalidOperationException();
+                return isValid;
 
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
                 var me = context.Sessions.FirstOrDefault(s => s.SessionId == SessionId);
@@ -104,7 +108,8 @@ namespace WU.Entity {
                 }
 
                 // if this session is still valid -> return true
-                if (me.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(site.Timezone)) > 0)
+                //                if (me.ValidUntil.CompareTo(DateTime.UtcNow.AddHours(site.Timezone)) > 0)
+                if (me.ValidUntil.CompareTo(AlarmClock.Now) > 0)
                     return isValid;
                 
                 // otherwise delete itself

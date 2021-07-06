@@ -30,6 +30,8 @@ namespace WU.Entity
 
         private bool IAmDeleted = false;
         private IAlarmClock alarmClock;
+
+
         string ISite.Name => Name;
         int ISite.Timezone => Timezone;
         int ISite.SessionExpirationInSeconds => SessionExpirationInSeconds;
@@ -172,7 +174,6 @@ namespace WU.Entity
             using (var context = new AuctionSiteContext(AuctionSiteContext.ConnectionStrings)) {
                 // 2. try to get user's session
                 session = context.Sessions.FirstOrDefault(s=> s.UserId == user.UserId && s.SiteId == this.SiteId);
-
 //                var NowTimeOfSite = DateTime.UtcNow.AddHours(Timezone);
                 var NowTimeOfSite = alarmClock.Now;
 
@@ -183,6 +184,7 @@ namespace WU.Entity
                     session.UserId = user.UserId;
                     session.SessionId = Session.sessionIdPool++.ToString();
                     session.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
+                    session.AlarmClock = alarmClock;
 
                     context.Sessions.Add(session);
                     context.SaveChanges();
@@ -197,7 +199,7 @@ namespace WU.Entity
                     newSession.UserId = user.UserId;
                     newSession.SessionId = Session.sessionIdPool++.ToString();
                     newSession.ValidUntil = NowTimeOfSite.AddSeconds(SessionExpirationInSeconds);
-                    newSession.SessionId = Session.sessionIdPool++.ToString();
+                    newSession.AlarmClock = alarmClock;
 
                     context.Sessions.Add(newSession);
                     context.Sessions.Remove(session);
